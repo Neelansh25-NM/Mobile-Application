@@ -24,10 +24,21 @@ jobs:
     - name: Grant Execute Permission for Gradle Wrapper
       run: chmod +x gradlew
 
+    - name: Build Release APK
+      run: ./gradlew assembleRelease
+
+    - name: Find and Print APK Path
+      run: |
+        echo "=== Locating built APK file paths ==="
+        find . -name "*.apk"
+        echo "======================================"
+
     - name: Create GitHub Release and Upload APK
       uses: softprops/action-gh-release@v2
       with:
-        files: app/build/outputs/apk/release/app-release-unsigned.apk
+        files: |
+          app/build/outputs/apk/release/app-release-unsigned.apk
+          app/build/outputs/apk/release/app-release.apk
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
