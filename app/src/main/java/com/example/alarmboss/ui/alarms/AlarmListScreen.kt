@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.alarmboss.data.Alarm
 import com.example.alarmboss.data.AlarmMode
+import com.example.alarmboss.data.ExerciseType
+import com.example.alarmboss.data.MentalExerciseType
+import com.example.alarmboss.data.StrictExerciseCategory
 import com.example.alarmboss.util.formatTime12h
 import java.time.DayOfWeek
 import java.time.format.TextStyle
@@ -78,7 +81,7 @@ private fun AlarmRow(
                 style = MaterialTheme.typography.headlineMedium
             )
             if (alarm.label.isNotBlank()) Text(alarm.label, style = MaterialTheme.typography.bodyMedium)
-            Text(modeLabel(alarm.mode), style = MaterialTheme.typography.bodySmall)
+            Text(modeLabel(alarm), style = MaterialTheme.typography.bodySmall)
             if (alarm.repeatDays.isNotEmpty()) {
                 Text(daysLabel(alarm.repeatDays), style = MaterialTheme.typography.bodySmall)
             }
@@ -88,10 +91,18 @@ private fun AlarmRow(
     }
 }
 
-private fun modeLabel(mode: AlarmMode) = when (mode) {
+private fun modeLabel(alarm: Alarm): String = when (alarm.mode) {
     AlarmMode.EASY -> "Easy"
     AlarmMode.MEDIUM -> "Medium · random task"
-    AlarmMode.STRICT -> "Strict · exercise"
+    AlarmMode.STRICT -> {
+        if (alarm.strictCategory == StrictExerciseCategory.PHYSICAL) {
+            val exName = if (alarm.exerciseType == ExerciseType.SQUATS) "Squats" else "Jumping jacks"
+            "Strict · Physical ($exName)"
+        } else {
+            val mentalName = if (alarm.mentalExerciseType == MentalExerciseType.MEMORY_GRID) "Memory Grid" else "Maze"
+            "Strict · Mental ($mentalName)"
+        }
+    }
 }
 
 private fun daysLabel(days: Set<Int>): String =

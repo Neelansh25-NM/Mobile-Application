@@ -7,12 +7,13 @@ enum class AlarmMode { EASY, MEDIUM, STRICT }
 
 enum class MediumTaskType { MATH, READING, LYRICS, BARCODE }
 
+// Add these enums for Strict Mode categorization
+enum class StrictExerciseCategory { PHYSICAL, MENTAL }
+
+enum class MentalExerciseType { MEMORY_GRID, MAZE}
+
 enum class ExerciseType { SQUATS, JUMPING_JACKS }
 
-/**
- * Days stored as ISO day-of-week ints: 1=Monday .. 7=Sunday (matches java.time.DayOfWeek).
- * Empty set = one-time alarm (fires once, then disables itself).
- */
 @Entity(tableName = "alarms")
 data class Alarm(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -26,5 +27,9 @@ data class Alarm(
     val vibrate: Boolean = true,
     val enabledMediumTasks: Set<MediumTaskType> = MediumTaskType.values().toSet(),
     val exerciseDurationSeconds: Int = 300,
-    val exerciseType: ExerciseType = ExerciseType.SQUATS
+    val exerciseType: ExerciseType = ExerciseType.SQUATS,
+
+    // Add these fields referenced in AlarmRingingActivity
+    val strictCategory: StrictExerciseCategory = StrictExerciseCategory.PHYSICAL,
+    val mentalExerciseType: MentalExerciseType = MentalExerciseType.MEMORY_GRID
 )

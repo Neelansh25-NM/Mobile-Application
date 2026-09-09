@@ -25,8 +25,7 @@ class AlarmScheduler(private val context: Context) {
                 pendingIntent
             )
         } else {
-            // Falls back to an inexact alarm if the user hasn't granted the exact-alarm
-            // permission (Android 12+). Prompt them to grant it from Settings for reliability.
+
             alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
         }
     }

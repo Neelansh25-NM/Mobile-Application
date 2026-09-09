@@ -25,7 +25,6 @@ fun AlarmEditScreen(
     viewModel: AlarmViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val existing = remember(alarmId) { mutableStateOf<Alarm?>(null) }
     var loaded by remember { mutableStateOf(alarmId == null) }
 
     LaunchedEffect(alarmId) {
@@ -49,6 +48,10 @@ fun AlarmEditScreen(
     var exerciseType by remember(base) { mutableStateOf(base?.exerciseType ?: ExerciseType.SQUATS) }
     var exerciseSeconds by remember(base) { mutableFloatStateOf((base?.exerciseDurationSeconds ?: 300).toFloat()) }
 
+    // Strict category state variables
+    var strictCategory by remember(base) { mutableStateOf(base?.strictCategory ?: StrictExerciseCategory.PHYSICAL) }
+    var mentalExerciseType by remember(base) { mutableStateOf(base?.mentalExerciseType ?: MentalExerciseType.MEMORY_GRID) }
+
     val soundPicker = rememberSoundPickerLauncher { uri -> soundUri = uri }
 
     Scaffold(
@@ -65,7 +68,9 @@ fun AlarmEditScreen(
                                 repeatDays = days, mode = mode, soundUri = soundUri,
                                 vibrate = vibrate, enabledMediumTasks = enabledTasks,
                                 exerciseDurationSeconds = exerciseSeconds.toInt(),
-                                exerciseType = exerciseType
+                                exerciseType = exerciseType,
+                                strictCategory = strictCategory,
+                                mentalExerciseType = mentalExerciseType
                             )
                         )
                         onDone()
@@ -111,8 +116,12 @@ fun AlarmEditScreen(
                 )
                 AlarmMode.MEDIUM -> MediumTaskPicker(enabledTasks) { enabledTasks = it }
                 AlarmMode.STRICT -> StrictConfig(
+                    strictCategory = strictCategory,
+                    onStrictCategoryChange = { strictCategory = it },
                     exerciseType = exerciseType,
                     onExerciseTypeChange = { exerciseType = it },
+                    mentalExerciseType = mentalExerciseType,
+                    onMentalExerciseTypeChange = { mentalExerciseType = it },
                     seconds = exerciseSeconds,
                     onSecondsChange = { exerciseSeconds = it }
                 )
@@ -160,7 +169,6 @@ private fun MediumTaskPicker(enabled: Set<MediumTaskType>, onChange: (Set<Medium
                     checked = enabled.contains(task),
                     onCheckedChange = {
                         val next = if (it) enabled + task else enabled - task
-                        // Keep at least one task enabled.
                         if (next.isNotEmpty()) onChange(next)
                     }
                 )
@@ -179,29 +187,67 @@ private fun taskLabel(task: MediumTaskType) = when (task) {
 
 @Composable
 private fun StrictConfig(
+    strictCategory: StrictExerciseCategory,
+    onStrictCategoryChange: (StrictExerciseCategory) -> Unit,
     exerciseType: ExerciseType,
     onExerciseTypeChange: (ExerciseType) -> Unit,
+    mentalExerciseType: MentalExerciseType,
+    onMentalExerciseTypeChange: (MentalExerciseType) -> Unit,
     seconds: Float,
     onSecondsChange: (Float) -> Unit
 ) {
     Column {
         Text(
-            "You'll need to exercise in front of the camera until the timer completes. " +
-                    "You can switch exercises mid-alarm without dismissing it.",
+            "Strict mode requires completing a verified physical workout or mental puzzle before the alarm can be dismissed.",
             style = MaterialTheme.typography.bodySmall
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
+
+        Text("Strict Category", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(4.dp))
         SingleChoiceSegmentedButtonRow {
-            ExerciseType.values().forEachIndexed { index, e ->
+            StrictExerciseCategory.values().forEachIndexed { index, cat ->
                 SegmentedButton(
-                    selected = exerciseType == e,
-                    onClick = { onExerciseTypeChange(e) },
-                    shape = SegmentedButtonDefaults.itemShape(index, ExerciseType.values().size)
-                ) { Text(if (e == ExerciseType.SQUATS) "Squats" else "Jumping jacks") }
+                    selected = strictCategory == cat,
+                    onClick = { onStrictCategoryChange(cat) },
+                    shape = SegmentedButtonDefaults.itemShape(index, StrictExerciseCategory.values().size)
+                ) {
+                    Text(if (cat == StrictExerciseCategory.PHYSICAL) "Physical" else "Mental")
+                }
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Text("Duration: ${seconds.toInt() / 60}m ${seconds.toInt() % 60}s")
-        Slider(value = seconds, onValueChange = onSecondsChange, valueRange = 60f..900f, steps = 13)
+
+        Spacer(Modifier.height(16.dp))
+
+        if (strictCategory == StrictExerciseCategory.PHYSICAL) {
+            Text("Physical Exercise Type", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(4.dp))
+            SingleChoiceSegmentedButtonRow {
+                ExerciseType.values().forEachIndexed { index, e ->
+                    SegmentedButton(
+                        selected = exerciseType == e,
+                        onClick = { onExerciseTypeChange(e) },
+                        shape = SegmentedButtonDefaults.itemShape(index, ExerciseType.values().size)
+                    ) { Text(if (e == ExerciseType.SQUATS) "Squats" else "Jumping jacks") }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            Text("Duration: ${seconds.toInt() / 60}m ${seconds.toInt() % 60}s")
+            Slider(value = seconds, onValueChange = onSecondsChange, valueRange = 60f..900f, steps = 13)
+        } else {
+            Text("Mental Challenge Type", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(4.dp))
+            SingleChoiceSegmentedButtonRow {
+                MentalExerciseType.values().forEachIndexed { index, type ->
+                    SegmentedButton(
+                        selected = mentalExerciseType == type,
+                        onClick = { onMentalExerciseTypeChange(type) },
+                        shape = SegmentedButtonDefaults.itemShape(index, MentalExerciseType.values().size)
+                    ) {
+                        Text(if (type == MentalExerciseType.MEMORY_GRID) "Memory Grid" else "Maze")
+                    }
+                }
+            }
+        }
     }
 }

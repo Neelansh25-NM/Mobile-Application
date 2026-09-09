@@ -12,18 +12,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.alarmboss.alarm.AlarmReceiver
 import com.example.alarmboss.alarm.AlarmScheduler
 import com.example.alarmboss.alarm.AlarmService
 import com.example.alarmboss.data.Alarm
 import com.example.alarmboss.data.AlarmMode
 import com.example.alarmboss.data.MediumTaskType
+import com.example.alarmboss.data.MentalExerciseType
+import com.example.alarmboss.data.StrictExerciseCategory
 import com.example.alarmboss.ui.ringing.tasks.BarcodeTaskScreen
 import com.example.alarmboss.ui.ringing.tasks.LyricsTaskScreen
 import com.example.alarmboss.ui.ringing.tasks.MathTaskScreen
+import com.example.alarmboss.ui.ringing.tasks.MazeTaskScreen
+import com.example.alarmboss.ui.ringing.tasks.MemoryTaskScreen
 import com.example.alarmboss.ui.ringing.tasks.ReadingTaskScreen
 import com.example.alarmboss.ui.theme.AlarmBossTheme
-import androidx.compose.ui.unit.dp
 
 /**
  * Full-screen activity shown over the lock screen when an alarm fires. This is the ONLY
@@ -67,8 +71,8 @@ class AlarmRingingActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
             )
         }
     }
@@ -106,11 +110,20 @@ private fun RingingContent(alarm: Alarm, onDismiss: () -> Unit, onSnooze: () -> 
                 MediumTaskType.BARCODE -> BarcodeTaskScreen(onScanned = onDismiss)
             }
         }
-        AlarmMode.STRICT -> StrictExerciseScreen(
-            initialExercise = alarm.exerciseType,
-            durationSeconds = alarm.exerciseDurationSeconds,
-            onComplete = onDismiss
-        )
+        AlarmMode.STRICT -> {
+            if (alarm.strictCategory == StrictExerciseCategory.MENTAL) {
+                when (alarm.mentalExerciseType) {
+                    MentalExerciseType.MEMORY_GRID -> MemoryTaskScreen(onSolved = onDismiss)
+                    MentalExerciseType.MAZE -> MazeTaskScreen(onSolved = onDismiss)
+                }
+            } else {
+                StrictExerciseScreen(
+                    initialExercise = alarm.exerciseType,
+                    durationSeconds = alarm.exerciseDurationSeconds,
+                    onComplete = onDismiss
+                )
+            }
+        }
     }
 }
 

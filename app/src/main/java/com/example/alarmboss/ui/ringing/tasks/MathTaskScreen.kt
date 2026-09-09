@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlin.random.Random
+import androidx.compose.foundation.text.KeyboardOptions
+
 
 private data class Problem(val text: String, val answer: Int)
 
@@ -44,13 +46,42 @@ fun MathTaskScreen(onSolved: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         Text(problem.text, style = MaterialTheme.typography.displaySmall)
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = input,
-            onValueChange = { input = it.filter { c -> c.isDigit() || c == '-' }; error = false },
-            label = { Text("Answer") },
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-            isError = error
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(0.8f)
+        ) {
+            // Quick toggle for positive/negative input
+            OutlinedButton(
+                onClick = {
+                    input = if (input.startsWith("-")) {
+                        input.removePrefix("-")
+                    } else {
+                        "-$input"
+                    }
+                    error = false
+                },
+                modifier = Modifier.height(56.dp)
+            ) {
+                Text("±", style = MaterialTheme.typography.titleMedium)
+            }
+
+            OutlinedTextField(
+                value = input,
+                onValueChange = { newValue ->
+                    // Only accept input if it's empty, a lone minus sign, or a valid signed integer
+                    if (newValue.isEmpty() || newValue == "-" || newValue.toIntOrNull() != null) {
+                        input = newValue
+                        error = false
+                    }
+                },
+                label = { Text("Answer") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = error,
+                modifier = Modifier.weight(1f)
+            )
+        }
         if (error) Text("Try again", color = MaterialTheme.colorScheme.error)
         Spacer(Modifier.height(16.dp))
         Button(onClick = {

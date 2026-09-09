@@ -35,6 +35,7 @@ fun ReadingTaskScreen(onDone: () -> Unit) {
     val scrollState = rememberScrollState()
     var heard by remember { mutableStateOf("") }
     var typed by remember { mutableStateOf("") }
+    var isTypingMode by remember { mutableStateOf(false) }
     var listening by remember { mutableStateOf(false) }
     var recognitionError by remember { mutableStateOf<String?>(null) }
     val recognitionAvailable = remember { SpeechRecognizer.isRecognitionAvailable(context) }
@@ -48,10 +49,12 @@ fun ReadingTaskScreen(onDone: () -> Unit) {
         passage?.trim()?.split(Regex("\\s+"))?.takeLast(8)?.joinToString(" ") ?: ""
     }
     val scrolledToEnd = scrollState.value >= (scrollState.maxValue - 4).coerceAtLeast(0)
-    val bestMatch = maxOf(
-        wordOverlapPercent(confirmPhrase, heard),
-        wordOverlapPercent(confirmPhrase, typed)
-    )
+
+    // Calculate voice match percentage based on the threshold
+    val voiceMatchPercent = wordOverlapPercent(confirmPhrase, heard)
+
+    // Enforce strict, case-sensitive exact match for typing
+    val isTypedCorrectly = typed.trim() == confirmPhrase.trim()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -90,37 +93,86 @@ fun ReadingTaskScreen(onDone: () -> Unit) {
         }
         Spacer(Modifier.height(12.dp))
         if (scrolledToEnd) {
-            Text("Read this line aloud to confirm:", style = MaterialTheme.typography.bodySmall)
-            Text("\"$confirmPhrase\"", style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(8.dp))
+            if (isTypingMode) {
+                // --- TYPING MODE UI ---
+                Text("Type the line below (case-sensitive):", style = MaterialTheme.typography.bodySmall)
+                Text("\"$confirmPhrase\"", style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(8.dp))
 
-            if (!recognitionAvailable) {
-                Text(
-                    "Voice recognition isn't available on this device. Type the line instead:",
-                    style = MaterialTheme.typography.bodySmall
+                OutlinedTextField(
+                    value = typed,
+                    onValueChange = { typed = it },
+                    label = { Text("Typed answer") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            } else {
-                if (heard.isNotBlank()) {
-                    Text("Heard: \"$heard\"", style = MaterialTheme.typography.bodySmall)
-                }
-                if (recognitionError != null) {
+
+                if (typed.isNotBlank() && !isTypedCorrectly) {
                     Text(
-                        "Couldn't hear that ($recognitionError). Try again or type below.",
+                        "Typed answer must match the original case exactly.",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
+                } else if (isTypedCorrectly) {
+                    Text(
+                        "Exact match achieved!",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
-                Button(onClick = { startListening() }, enabled = !listening) {
-                    Text(if (listening) "Listening…" else "Tap and read aloud")
-                }
+
                 Spacer(Modifier.height(8.dp))
-                Text("or type it:", style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = { isTypingMode = false }) {
+                    Text("Switch to voice dictation")
+                }
+
+            } else {
+                // --- VOICE DICTATION MODE UI ---
+                Text("Read this line aloud to confirm:", style = MaterialTheme.typography.bodySmall)
+                Text("\"$confirmPhrase\"", style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(8.dp))
+
+                if (!recognitionAvailable) {
+                    Text(
+                        "Voice recognition isn't available on this device.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(onClick = { isTypingMode = true }) {
+                        Text("Switch to typing mode")
+                    }
+                } else {
+                    if (heard.isNotBlank()) {
+                        Text("Heard: \"$heard\"", style = MaterialTheme.typography.bodySmall)
+                        Text("Voice Match: $voiceMatchPercent%", style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (recognitionError != null) {
+                        Text(
+                            "Couldn't hear that ($recognitionError). Try again.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Button(onClick = { startListening() }, enabled = !listening) {
+                        Text(if (listening) "Listening…" else "Tap and read aloud")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick = { isTypingMode = true }) {
+                        Text("Switch to typing instead")
+                    }
+                }
             }
-            OutlinedTextField(value = typed, onValueChange = { typed = it }, label = { Text("Typed answer") })
-            Spacer(Modifier.height(8.dp))
-            Text("Match: $bestMatch%", style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(8.dp))
-            Button(onClick = onDone, enabled = bestMatch >= 60) { Text("Done") }
+
+            Spacer(Modifier.height(16.dp))
+
+            // --- DONE BUTTON VALIDATION ---
+            Button(
+                onClick = onDone,
+                enabled = if (isTypingMode) isTypedCorrectly else voiceMatchPercent >= 60
+            ) {
+                Text("Done")
+            }
         } else {
             Text("Scroll to the bottom to continue", style = MaterialTheme.typography.bodySmall)
         }
