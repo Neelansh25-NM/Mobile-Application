@@ -55,6 +55,7 @@ fun AlarmListScreen(
 
             // Wake-Up Streak UI
             if (currentStreak > 0) {
+                // Wake-Up Streak UI - Always visible
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -62,7 +63,7 @@ fun AlarmListScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "🔥 Current Streak: $currentStreak Days 🔥",
+                        text = if (currentStreak > 0) "🔥 Current Streak: $currentStreak Days 🔥" else "🔥 Current Streak: 0 Days (Wake up tomorrow to start!) 🔥",
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFFFA500)
                     )

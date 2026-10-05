@@ -70,4 +70,7 @@ dependencies {
     implementation(libs.mlkit.pose.detection.accurate)
 
     implementation(libs.androidx.material.icons.extended)
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+
 }

@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.alarmboss.ui.alarms.AlarmEditScreen
 import com.example.alarmboss.ui.alarms.AlarmListScreen
+import com.example.alarmboss.ui.productivity.ProductivityScreen
 import com.example.alarmboss.ui.settings.SettingsScreen
 import com.example.alarmboss.ui.stopwatch.StopwatchScreen
 import com.example.alarmboss.ui.theme.AlarmBossTheme
@@ -33,6 +35,7 @@ private object Routes {
     const val EDIT = "edit"
     const val STOPWATCH = "stopwatch"
     const val SETTINGS = "settings"
+    const val PRODUCTIVITY = "productivity"
 }
 
 class MainActivity : ComponentActivity() {
@@ -51,9 +54,6 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun RequestRuntimePermissions() {
-    // Notifications (Android 13+) and camera/audio are requested contextually where they're
-    // used (task/exercise screens); this just grabs the notification permission up front so
-    // the alarm's full-screen notification can post at all.
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -75,21 +75,51 @@ private fun AlarmBossRoot() {
 
                 NavigationBarItem(
                     selected = currentDestination?.hierarchy?.any { it.route == Routes.ALARMS } == true,
-                    onClick = { navController.navigate(Routes.ALARMS) { popUpTo(navController.graph.findStartDestination().id) } },
+                    onClick = {
+                        navController.navigate(Routes.ALARMS) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     icon = { Icon(Icons.Default.Alarm, contentDescription = "Alarms") },
                     label = { Text("Alarms") }
                 )
                 NavigationBarItem(
                     selected = currentDestination?.hierarchy?.any { it.route == Routes.STOPWATCH } == true,
-                    onClick = { navController.navigate(Routes.STOPWATCH) { popUpTo(navController.graph.findStartDestination().id) } },
+                    onClick = {
+                        navController.navigate(Routes.STOPWATCH) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     icon = { Icon(Icons.Default.Timer, contentDescription = "Stopwatch") },
                     label = { Text("Stopwatch") }
                 )
                 NavigationBarItem(
                     selected = currentDestination?.hierarchy?.any { it.route == Routes.SETTINGS } == true,
-                    onClick = { navController.navigate(Routes.SETTINGS) { popUpTo(navController.graph.findStartDestination().id) } },
+                    onClick = {
+                        navController.navigate(Routes.SETTINGS) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
                     label = { Text("Settings") }
+                )
+                NavigationBarItem(
+                    selected = currentDestination?.hierarchy?.any { it.route == Routes.PRODUCTIVITY } == true,
+                    onClick = {
+                        navController.navigate(Routes.PRODUCTIVITY) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(Icons.Default.Search, contentDescription = "Hacks") },
+                    label = { Text("Hacks") }
                 )
             }
         }
@@ -112,6 +142,7 @@ private fun AlarmBossRoot() {
             }
             composable(Routes.STOPWATCH) { StopwatchScreen() }
             composable(Routes.SETTINGS) { SettingsScreen() }
+            composable(Routes.PRODUCTIVITY) { ProductivityScreen() }
         }
     }
 }
