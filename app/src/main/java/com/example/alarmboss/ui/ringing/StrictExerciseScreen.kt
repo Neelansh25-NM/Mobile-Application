@@ -1,6 +1,7 @@
 package com.example.alarmboss.ui.ringing
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -13,14 +14,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.alarmboss.R
 import com.example.alarmboss.data.ExerciseType
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.Pose
@@ -58,9 +62,16 @@ fun StrictExerciseScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         )
     }
+    var permanentlyDenied by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted -> hasPermission = granted }
+    ) { granted ->
+        hasPermission = granted
+        val activity = context as? Activity
+        if (!granted && activity != null) {
+            permanentlyDenied = !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+        }
+    }
     LaunchedEffect(Unit) { if (!hasPermission) permissionLauncher.launch(Manifest.permission.CAMERA) }
 
     // Countdown only ticks down while the camera can see the person moving; this is what
@@ -72,16 +83,19 @@ fun StrictExerciseScreen(
     }
 
     Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Text("Strict mode: keep moving to dismiss", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.strict_title), style = MaterialTheme.typography.titleMedium)
         Text(
-            if (exercise == ExerciseType.SQUATS) "Exercise: Squats" else "Exercise: Jumping jacks",
+            stringResource(
+                if (exercise == ExerciseType.SQUATS) R.string.strict_exercise_squats
+                else R.string.strict_exercise_jumping_jacks
+            ),
             style = MaterialTheme.typography.bodyMedium
         )
-        Text("Time remaining: ${remaining / 60}:${(remaining % 60).toString().padStart(2, '0')}")
-        Text("Reps detected: $reps", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.strict_time_remaining, remaining / 60, remaining % 60))
+        Text(stringResource(R.string.strict_reps_detected, reps), style = MaterialTheme.typography.bodySmall)
         if (!personVisible) {
             Text(
-                "Can't see you clearly — step back so your full body is in frame.",
+                stringResource(R.string.strict_not_visible),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -97,13 +111,17 @@ fun StrictExerciseScreen(
             }
         } else {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("Camera permission is required for Strict mode.")
+                CameraPermissionRequired(
+                    message = stringResource(R.string.strict_camera_required),
+                    permanentlyDenied = permanentlyDenied,
+                    onRequestPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) }
+                )
             }
         }
         Spacer(Modifier.height(12.dp))
         OutlinedButton(onClick = {
             exercise = if (exercise == ExerciseType.SQUATS) ExerciseType.JUMPING_JACKS else ExerciseType.SQUATS
-        }) { Text("Change exercise") }
+        }) { Text(stringResource(R.string.strict_change_exercise)) }
     }
 }
 
@@ -124,6 +142,13 @@ private fun PoseCameraPreview(
     }
     val executor = remember { Executors.newSingleThreadExecutor() }
     val repCounter = remember(exercise) { RepCounter(exercise) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            executor.shutdown()
+            detector.close()
+        }
+    }
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),

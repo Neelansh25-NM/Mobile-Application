@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_title">Your Arena Profile</string>
+    <string name="stats_level">Level %1$d</string>
+    <string name="stats_xp_progress">%1$d / %2$d XP</string>
+    <string name="stats_current_streak">Current Streak</string>
+    <string name="stats_streak_value">%1$d 🔥</string>
+    <string name="stats_bosses_defeated">Bosses Defeated</string>
+    <string name="stats_bosses_value">%1$d 💀</string>
+    <string name="stats_records">Records</string>
+    <plurals name="stats_longest_streak">
+        <item quantity="one">Longest Streak: %1$d day</item>
+        <item quantity="other">Longest Streak: %1$d days</item>
+    </plurals>
+    <string name="stats_total_wake_ups">Total Wake-Ups: %1$d</string>
+    <string name="stats_avg_reaction">Avg Reaction Time: %1$s</string>
+    <string name="stats_seconds">%1$ds</string>
+    <string name="stats_not_available">N/A</string>
+    <string name="stats_past_four_weeks">Past 4 Weeks</string>
+    <string name="stats_avatars_title">Boss Hunter Badges &amp; Avatars</string>
+    <string name="stats_avatar_equipped">Equipped</string>
+    <string name="stats_avatar_equip">Equip</string>
+    <string name="stats_avatar_locked">Unlocks at Level %1$d</string>
+    <string name="avatar_rookie">Rookie Sleeper</string>
+    <string name="avatar_warrior">Dawn Warrior</string>
+    <string name="avatar_paladin">Sun Paladin</string>
+    <string name="avatar_overlord">Alarm Overlord</string>
+</resources>

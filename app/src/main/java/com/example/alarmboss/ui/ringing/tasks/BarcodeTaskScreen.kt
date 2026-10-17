@@ -1,6 +1,7 @@
 package com.example.alarmboss.ui.ringing.tasks
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -13,14 +14,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.compose.ui.res.stringResource
+import com.example.alarmboss.R
+import com.example.alarmboss.ui.ringing.CameraPermissionRequired
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
@@ -33,43 +38,78 @@ import java.util.concurrent.Executors
 @Composable
 fun BarcodeTaskScreen(onScanned: () -> Unit) {
     val context = LocalContext.current
+    val contentStore = remember { com.example.alarmboss.data.ContentStore(context) }
+    val registeredBarcode by contentStore.registeredBarcode.collectAsState(initial = null)
     var lastSeen by remember { mutableStateOf("") }
+    var mismatchError by remember { mutableStateOf(false) }
     var hasPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         )
     }
+    var permanentlyDenied by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted -> hasPermission = granted }
+    ) { granted ->
+        hasPermission = granted
+        val activity = context as? Activity
+        if (!granted && activity != null) {
+            permanentlyDenied = !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+        }
+    }
 
     LaunchedEffect(Unit) { if (!hasPermission) permissionLauncher.launch(Manifest.permission.CAMERA) }
 
     Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Text("Scan any barcode to dismiss", style = MaterialTheme.typography.titleMedium)
+        val hasRegistered = !registeredBarcode.isNullOrBlank()
+        Text(
+            stringResource(if (hasRegistered) R.string.barcode_title_registered else R.string.barcode_title),
+            style = MaterialTheme.typography.titleMedium
+        )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Get up and find something with a barcode on it -- a food package, a book, " +
-                    "a bottle, anything works. Point the camera at it.",
+            if (hasRegistered) stringResource(R.string.barcode_custom_hint, registeredBarcode.orEmpty())
+            else stringResource(R.string.barcode_hint),
             style = MaterialTheme.typography.bodySmall
         )
+        if (mismatchError) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.barcode_mismatch),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
         Spacer(Modifier.height(12.dp))
         if (hasPermission) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 CameraPreviewWithBarcodeScan(
                     onBarcodeDetected = { value ->
                         lastSeen = value
-                        onScanned()
+                        if (hasRegistered) {
+                            if (value.trim().equals(registeredBarcode?.trim(), ignoreCase = true)) {
+                                mismatchError = false
+                                onScanned()
+                            } else {
+                                mismatchError = true
+                            }
+                        } else {
+                            onScanned()
+                        }
                     }
                 )
             }
             Spacer(Modifier.height(8.dp))
             if (lastSeen.isNotBlank()) {
-                Text("Last scanned: $lastSeen", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.barcode_last_scanned, lastSeen), style = MaterialTheme.typography.bodySmall)
             }
         } else {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("Camera permission is required for this task.")
+                CameraPermissionRequired(
+                    message = stringResource(R.string.barcode_camera_required),
+                    permanentlyDenied = permanentlyDenied,
+                    onRequestPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) }
+                )
             }
         }
     }
@@ -81,6 +121,14 @@ private fun CameraPreviewWithBarcodeScan(onBarcodeDetected: (String) -> Unit) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val scanner = remember { BarcodeScanning.getClient() }
     val executor = remember { Executors.newSingleThreadExecutor() }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            executor.shutdown()
+            scanner.close()
+        }
+    }
+
     // Prevents onBarcodeDetected firing repeatedly per frame once a code is found --
     // the caller's onScanned() will navigate away, but frames in flight could still land.
     var handled by remember { mutableStateOf(false) }

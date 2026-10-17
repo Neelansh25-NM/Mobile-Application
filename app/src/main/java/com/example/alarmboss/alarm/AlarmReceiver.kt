@@ -1,24 +1,88 @@
 package com.example.alarmboss.alarm
 
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.example.alarmboss.AlarmBossApp
+import com.example.alarmboss.R
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val alarmId = intent.getLongExtra(EXTRA_ALARM_ID, -1L)
         if (alarmId == -1L) return
 
-        val serviceIntent = Intent(context, AlarmService::class.java).apply {
-            action = AlarmService.ACTION_START
+        when (intent.action) {
+            ACTION_CONFIRM_AWAKE -> {
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.cancel(WAKE_CHECK_NOTIFICATION_ID)
+                AlarmScheduler(context).cancelWakeCheck(alarmId)
+            }
+            ACTION_WAKE_CHECK -> {
+                showWakeCheckNotification(context, alarmId)
+                // Schedule safeguard re-alarm in 60s if awake is not confirmed
+                AlarmScheduler(context).scheduleWakeCheckTimeout(alarmId, 60)
+            }
+            ACTION_WAKE_CHECK_TIMEOUT -> {
+                // User failed to confirm awake! Sound the alarm again immediately
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.cancel(WAKE_CHECK_NOTIFICATION_ID)
+                val serviceIntent = Intent(context, AlarmService::class.java).apply {
+                    action = AlarmService.ACTION_START
+                    putExtra(EXTRA_ALARM_ID, alarmId)
+                }
+                ContextCompat.startForegroundService(context, serviceIntent)
+            }
+            else -> {
+                val serviceIntent = Intent(context, AlarmService::class.java).apply {
+                    action = AlarmService.ACTION_START
+                    putExtra(EXTRA_ALARM_ID, alarmId)
+                }
+                ContextCompat.startForegroundService(context, serviceIntent)
+            }
+        }
+    }
+
+    private fun showWakeCheckNotification(context: Context, alarmId: Long) {
+        val confirmIntent = Intent(context, AlarmReceiver::class.java).apply {
+            action = ACTION_CONFIRM_AWAKE
             putExtra(EXTRA_ALARM_ID, alarmId)
         }
-        ContextCompat.startForegroundService(context, serviceIntent)
+        val confirmPending = PendingIntent.getBroadcast(
+            context,
+            (alarmId + 200000).toInt(),
+            confirmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, AlarmBossApp.CHANNEL_ALARM)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(context.getString(R.string.wake_check_title))
+            .setContentText(context.getString(R.string.wake_check_body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setContentIntent(confirmPending)
+            .setAutoCancel(true)
+            .addAction(
+                R.drawable.ic_launcher_foreground,
+                context.getString(R.string.wake_check_im_awake),
+                confirmPending
+            )
+            .build()
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(WAKE_CHECK_NOTIFICATION_ID, notification)
     }
 
     companion object {
         const val ACTION_ALARM_TRIGGER = "com.example.alarmboss.ACTION_ALARM_TRIGGER"
+        const val ACTION_WAKE_CHECK = "com.example.alarmboss.ACTION_WAKE_CHECK"
+        const val ACTION_WAKE_CHECK_TIMEOUT = "com.example.alarmboss.ACTION_WAKE_CHECK_TIMEOUT"
+        const val ACTION_CONFIRM_AWAKE = "com.example.alarmboss.ACTION_CONFIRM_AWAKE"
         const val EXTRA_ALARM_ID = "extra_alarm_id"
+        const val WAKE_CHECK_NOTIFICATION_ID = 999
     }
 }

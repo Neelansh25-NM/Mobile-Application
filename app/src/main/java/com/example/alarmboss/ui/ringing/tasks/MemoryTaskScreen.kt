@@ -12,7 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.alarmboss.R
 import kotlinx.coroutines.delay
 
 @Composable
@@ -63,12 +65,12 @@ fun MemoryTaskScreen(onSolved: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = if (isMemorizePhase) "Memorize the pattern" else "Tap the highlighted tiles",
+            text = stringResource(if (isMemorizePhase) R.string.memory_memorize else R.string.memory_tap),
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "${selectedTiles.size} / $targetCount",
+            text = stringResource(R.string.task_progress, selectedTiles.size, targetCount),
             style = MaterialTheme.typography.bodyMedium,
             color = if (errorState) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
         )

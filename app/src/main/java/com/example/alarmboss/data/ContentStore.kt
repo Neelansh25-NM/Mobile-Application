@@ -3,7 +3,6 @@ package com.example.alarmboss.data
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -14,15 +13,15 @@ private val Context.dataStore by preferencesDataStore(name = "alarmboss_content"
 /**
  * Holds user-supplied content for Medium-mode tasks. We deliberately do NOT ship any
  * copyrighted song lyrics or third-party text with the app -- the user types/pastes
- * their own reading passages and lyric lines here, and sets which physical barcode/QR
- * code (e.g. one they stick on the bathroom mirror) the barcode task must scan.
+ * their own reading passages and lyric lines here. (The barcode task needs no content: it
+ * accepts any real-world barcode.)
  */
 class ContentStore(private val context: Context) {
 
     private object Keys {
         val READING_PASSAGES = stringSetPreferencesKey("reading_passages")
         val LYRIC_LINES = stringSetPreferencesKey("lyric_lines")
-        val BARCODE_TARGET = stringPreferencesKey("barcode_target")
+        val REGISTERED_BARCODE = androidx.datastore.preferences.core.stringPreferencesKey("registered_barcode")
     }
 
     val readingPassages: Flow<List<String>> =
@@ -31,8 +30,8 @@ class ContentStore(private val context: Context) {
     val lyricLines: Flow<List<String>> =
         context.dataStore.data.map { it[Keys.LYRIC_LINES]?.toList() ?: emptyList() }
 
-    val barcodeTarget: Flow<String?> =
-        context.dataStore.data.map { it[Keys.BARCODE_TARGET] }
+    val registeredBarcode: Flow<String?> =
+        context.dataStore.data.map { it[Keys.REGISTERED_BARCODE] }
 
     suspend fun setReadingPassages(passages: List<String>) {
         context.dataStore.edit { it[Keys.READING_PASSAGES] = passages.toSet() }
@@ -42,20 +41,25 @@ class ContentStore(private val context: Context) {
         context.dataStore.edit { it[Keys.LYRIC_LINES] = lines.toSet() }
     }
 
-    suspend fun setBarcodeTarget(value: String) {
-        context.dataStore.edit { it[Keys.BARCODE_TARGET] = value }
+    suspend fun setRegisteredBarcode(code: String?) {
+        context.dataStore.edit {
+            if (code.isNullOrBlank()) {
+                it.remove(Keys.REGISTERED_BARCODE)
+            } else {
+                it[Keys.REGISTERED_BARCODE] = code.trim()
+            }
+        }
     }
 
     suspend fun getRandomPassage(): String = readingPassages.first().randomOrNull() ?: defaultPassages.first()
     suspend fun getRandomLyric(): String? = lyricLines.first().randomOrNull()
+    suspend fun getRegisteredBarcode(): String? = registeredBarcode.first()
 
     companion object {
-        // Generic, non-copyrighted filler text used only if the user hasn't added their own yet.
+        // Inspiring morning wake-up passages used if the user hasn't added custom ones yet.
         val defaultPassages = listOf(
-            "Add your own reading passages in Settings so this task quizzes you on text " +
-                "you actually chose. Until then, here is a placeholder paragraph: the quick " +
-                "brown fox jumps over the lazy dog while the early morning sun rises steadily " +
-                "over the quiet hills, and a gentle breeze moves through the trees."
+            "The morning sun rises steadily over the quiet hills, bringing calm clarity and a fresh start. Take a deep breath, drink a glass of water, and move forward into your day with focus and intention.",
+            "Energy and momentum are built one conscious step at a time. Clear away the distractions of yesterday and direct your mind toward the goals that truly inspire you today."
         )
     }
 }

@@ -5,23 +5,30 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.alarmboss.R
 import kotlin.random.Random
 import androidx.compose.foundation.text.KeyboardOptions
 
 
 private data class Problem(val text: String, val answer: Int)
 
-private fun randomProblem(): Problem {
-    val a = Random.nextInt(2, 50)
-    val b = Random.nextInt(2, 50)
+// difficulty 1 matches the original ranges (operands < 50, factors < 12); each step widens them.
+private fun randomProblem(difficulty: Int): Problem {
+    val maxOperand = 40 + difficulty * 10
+    val maxFactor = 11 + difficulty
+    val a = Random.nextInt(2, maxOperand)
+    val b = Random.nextInt(2, maxOperand)
     return when (Random.nextInt(3)) {
         0 -> Problem("$a + $b", a + b)
         1 -> Problem("$a - $b", a - b)
         else -> {
-            val small = Random.nextInt(2, 12)
-            val small2 = Random.nextInt(2, 12)
+            val small = Random.nextInt(2, maxFactor)
+            val small2 = Random.nextInt(2, maxFactor)
             Problem("$small × $small2", small * small2)
         }
     }
@@ -29,20 +36,21 @@ private fun randomProblem(): Problem {
 
 /** Requires solving 3 problems in a row correctly to dismiss the alarm. */
 @Composable
-fun MathTaskScreen(onSolved: () -> Unit) {
+fun MathTaskScreen(difficulty: Int = 1, onSolved: () -> Unit) {
     var solvedCount by remember { mutableIntStateOf(0) }
-    var problem by remember { mutableStateOf(randomProblem()) }
+    var problem by remember { mutableStateOf(randomProblem(difficulty)) }
     var input by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
     val target = 3
+    val toggleSignDescription = stringResource(R.string.math_toggle_sign_description)
 
     Column(
         Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Solve $target problems to dismiss", style = MaterialTheme.typography.titleMedium)
-        Text("$solvedCount / $target", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.math_title, target), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.task_progress, solvedCount, target), style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(24.dp))
         Text(problem.text, style = MaterialTheme.typography.displaySmall)
         Spacer(Modifier.height(16.dp))
@@ -61,7 +69,7 @@ fun MathTaskScreen(onSolved: () -> Unit) {
                     }
                     error = false
                 },
-                modifier = Modifier.height(56.dp)
+                modifier = Modifier.height(56.dp).semantics { contentDescription = toggleSignDescription }
             ) {
                 Text("±", style = MaterialTheme.typography.titleMedium)
             }
@@ -75,23 +83,23 @@ fun MathTaskScreen(onSolved: () -> Unit) {
                         error = false
                     }
                 },
-                label = { Text("Answer") },
+                label = { Text(stringResource(R.string.task_answer)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = error,
                 modifier = Modifier.weight(1f)
             )
         }
-        if (error) Text("Try again", color = MaterialTheme.colorScheme.error)
+        if (error) Text(stringResource(R.string.task_try_again), color = MaterialTheme.colorScheme.error)
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
             if (input.toIntOrNull() == problem.answer) {
                 solvedCount++
                 input = ""
-                if (solvedCount >= target) onSolved() else problem = randomProblem()
+                if (solvedCount >= target) onSolved() else problem = randomProblem(difficulty)
             } else {
                 error = true
             }
-        }) { Text("Submit") }
+        }) { Text(stringResource(R.string.task_submit)) }
     }
 }

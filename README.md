@@ -1,6 +1,18 @@
 # AlarmBoss 🚨
 
-An advanced Android alarm application built using Jetpack Compose, Kotlin, and Material Design 3. AlarmBoss features strict challenges (Math, Lyrics, Barcodes, and Reading tasks) to ensure you wake up on time.
+An advanced Android alarm application built using Jetpack Compose, Kotlin, and Material Design 3. AlarmBoss features strict challenges (Math, Lyrics, Barcodes, Reading, Pattern Lock and Word Scramble tasks) to ensure you wake up on time.
+
+---
+
+## 🎮 Progression
+
+Every alarm you actually wake up to earns XP, so mornings become a game you can level up in.
+
+- **XP and levels:** Easy, Medium and Strict alarms pay different XP, with bonuses for your streak and for finishing fast. Levels follow a square-root curve (level 2 at 50 XP, level 3 at 200 XP).
+- **Wake-up streak:** consecutive days with a completed alarm. Miss a day and it restarts at 1.
+- **Boss fights:** on every 7th day of a streak, Medium and Strict alarms swap their task for a three-stage boss fight (Math, then Sequence, then Maze) worth a flat 100 XP. Easy alarms stay one tap.
+- **Adaptive difficulty:** Math and Maze tasks get harder as your level and streak grow (difficulty 1-10).
+- **Stats tab:** level progress, streak, bosses defeated, records and a four-week wake-up calendar.
 
 ---
 
@@ -34,3 +46,4 @@ git push origin v1.0.0
 1. **Automation Trigger:** GitHub will immediately detect the new `v*` tag and spin up an isolated virtual environment to compile your code.
 2. **Track the Progress:** Navigate to your repository page on the GitHub website and click the **Actions** tab at the top. You will see a live workflow log showing your Gradle environment compiling the APK.
 3. **Download the App:** Once the build successfully completes, a brand new production **Release** will instantly appear on your GitHub dashboard. Your compiled `app-release.apk` file will be attached and ready for download onto any Android device!
+

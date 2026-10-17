@@ -12,11 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.example.alarmboss.data.ContentStore
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.alarmboss.R
 import com.example.alarmboss.util.wordOverlapPercent
 import java.util.Locale
 
@@ -32,15 +34,16 @@ import java.util.Locale
 @Composable
 fun LyricsTaskScreen(onDone: () -> Unit) {
     val context = LocalContext.current
-    val store = remember { ContentStore(context) }
-    var line by remember { mutableStateOf<String?>(null) }
+    val contentViewModel: TaskContentViewModel = viewModel()
+    val lyricState by contentViewModel.lyric.collectAsState()
+    val line = (lyricState as? LyricState.Line)?.text
     var heard by remember { mutableStateOf("") }
     var typed by remember { mutableStateOf("") }
     var listening by remember { mutableStateOf(false) }
     var recognitionError by remember { mutableStateOf<String?>(null) }
     val recognitionAvailable = remember { SpeechRecognizer.isRecognitionAvailable(context) }
 
-    LaunchedEffect(Unit) { line = store.getRandomLyric() }
+    LaunchedEffect(Unit) { contentViewModel.loadLyric() }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -81,50 +84,54 @@ fun LyricsTaskScreen(onDone: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (line == null) {
+        if (lyricState is LyricState.Loading) {
+            // Don't offer the "no lyrics, continue" skip while the line is still being fetched.
+            CircularProgressIndicator()
+        } else if (line == null) {
             Text(
-                "No lyric lines set up yet. Add some in Settings, then this task will " +
-                        "ask you to sing them. Skipping for now.",
+                stringResource(R.string.lyrics_none),
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(16.dp))
-            Button(onClick = onDone) { Text("Continue") }
+            Button(onClick = onDone) { Text(stringResource(R.string.task_continue)) }
         } else {
-            Text("Sing this line:", style = MaterialTheme.typography.titleMedium)
-            Text("\"$line\"", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.lyrics_sing_this), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.task_quoted, line.orEmpty()), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(24.dp))
 
             if (!recognitionAvailable) {
                 Text(
-                    "Voice recognition isn't available on this device (this is common on " +
-                            "phones where Google isn't set as the default voice input app). " +
-                            "Type what you sang instead:",
+                    stringResource(R.string.lyrics_no_voice),
                     style = MaterialTheme.typography.bodySmall
                 )
             } else {
                 if (heard.isNotBlank()) {
-                    Text("Heard: \"$heard\"", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.task_heard, heard), style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
                 }
                 if (recognitionError != null) {
                     Text(
-                        "Couldn't hear that ($recognitionError). Try again or type below.",
+                        stringResource(R.string.lyrics_error, recognitionError.orEmpty()),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 Button(onClick = { startListening() }, enabled = !listening) {
-                    Text(if (listening) "Listening…" else "Tap and sing")
+                    Text(stringResource(if (listening) R.string.task_listening else R.string.lyrics_tap_to_sing))
                 }
                 Spacer(Modifier.height(16.dp))
-                Text("or type what you sang:", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.lyrics_or_type), style = MaterialTheme.typography.bodySmall)
             }
 
-            OutlinedTextField(value = typed, onValueChange = { typed = it }, label = { Text("Typed answer") })
+            OutlinedTextField(
+                value = typed,
+                onValueChange = { typed = it },
+                label = { Text(stringResource(R.string.task_typed_answer)) }
+            )
             Spacer(Modifier.height(8.dp))
-            Text("Match: $bestMatch%", style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.task_match_percent, bestMatch), style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(16.dp))
-            Button(onClick = onDone, enabled = bestMatch >= 60) { Text("Done") }
+            Button(onClick = onDone, enabled = bestMatch >= 60) { Text(stringResource(R.string.task_done)) }
         }
     }
 }

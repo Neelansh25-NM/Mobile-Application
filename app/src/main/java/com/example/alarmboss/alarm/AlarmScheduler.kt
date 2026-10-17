@@ -45,6 +45,74 @@ class AlarmScheduler(private val context: Context) {
         alarmManager.cancel(pendingIntentFor(alarmId))
     }
 
+    fun scheduleWakeCheck(alarmId: Long, minutes: Int = 5) {
+        val triggerAtMillis = System.currentTimeMillis() + minutes * 60_000L
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = AlarmReceiver.ACTION_WAKE_CHECK
+            putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (alarmId + 100000).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+        } else {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+        }
+    }
+
+    fun cancelWakeCheck(alarmId: Long) {
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = AlarmReceiver.ACTION_WAKE_CHECK
+            putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (alarmId + 100000).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
+        cancelWakeCheckTimeout(alarmId)
+    }
+
+    /** Schedules fallback alarm ringing if user fails to confirm awake within seconds (default 60s). */
+    fun scheduleWakeCheckTimeout(alarmId: Long, seconds: Int = 60) {
+        val triggerAtMillis = System.currentTimeMillis() + seconds * 1000L
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = AlarmReceiver.ACTION_WAKE_CHECK_TIMEOUT
+            putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (alarmId + 300000).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (alarmManager.canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+        } else {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+        }
+    }
+
+    fun cancelWakeCheckTimeout(alarmId: Long) {
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = AlarmReceiver.ACTION_WAKE_CHECK_TIMEOUT
+            putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (alarmId + 300000).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
+    }
+
     private fun pendingIntentFor(alarmId: Long): PendingIntent {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = AlarmReceiver.ACTION_ALARM_TRIGGER

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings -->
+    <string name="settings_snooze_title">Snooze length</string>
+    <string name="settings_snooze_body">How long an Easy-mode alarm waits after you tap Snooze. Medium and Strict alarms can\'t be snoozed.</string>
+    <string name="settings_snooze_option">%1$d min</string>
+    <string name="settings_content_title">Task content</string>
+    <string name="settings_content_body">Add your own content below so Medium-mode tasks quiz you on things you chose (we don\'t ship any copyrighted text or lyrics).</string>
+    <string name="settings_passages_title">Reading passages (separate with a line containing ---)</string>
+    <string name="settings_save_passages">Save passages</string>
+    <string name="settings_lyrics_title">Lyric lines (one per line)</string>
+    <string name="settings_save_lyrics">Save lyrics</string>
+    <string name="settings_registered_barcode_title">Registered Barcode / QR Code (Optional)</string>
+    <string name="settings_registered_barcode_body">Enter a specific barcode number to require scanning that exact item (e.g. from your toothpaste or bathroom mirror). Leave empty to allow any barcode.</string>
+    <string name="settings_save_barcode">Save barcode</string>
+
+    <!-- Stopwatch -->
+    <string name="stopwatch_start">Start</string>
+    <string name="stopwatch_pause">Pause</string>
+    <string name="stopwatch_lap">Lap</string>
+    <string name="stopwatch_reset">Reset</string>
+    <string name="stopwatch_lap_row">Lap %1$d: %2$s</string>
+</resources>

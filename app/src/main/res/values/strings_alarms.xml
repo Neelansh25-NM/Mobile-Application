@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+
+    <!-- Labels for modes, tasks and exercises, used by the list and the editor -->
+    <string name="alarm_mode_easy">Easy</string>
+    <string name="alarm_mode_medium">Medium</string>
+    <string name="alarm_mode_strict">Strict</string>
+    <string name="alarm_summary_medium">Medium · random task</string>
+    <string name="alarm_summary_strict_physical">Strict · Physical (%1$s)</string>
+    <string name="alarm_summary_strict_mental">Strict · Mental (%1$s)</string>
+    <string name="exercise_squats">Squats</string>
+    <string name="exercise_jumping_jacks">Jumping jacks</string>
+    <string name="mental_memory_grid">Memory Grid</string>
+    <string name="mental_maze">Maze</string>
+    <string name="medium_task_math">Math problem</string>
+    <string name="medium_task_reading">Read a passage</string>
+    <string name="medium_task_lyrics">Sing along to lyrics</string>
+    <string name="medium_task_barcode">Scan a barcode</string>
+    <string name="medium_task_pattern_lock">Memorize a pattern</string>
+    <string name="medium_task_word_scramble">Unscramble words</string>
+    <string name="medium_task_steps">Walk / Step counter</string>
+
+    <!-- Alarm list -->
+    <string name="alarms_add_description">Add alarm</string>
+    <string name="alarms_empty">No alarms yet. Tap + to add one.</string>
+    <plurals name="alarms_streak_banner">
+        <item quantity="one">🔥 Current Streak: %1$d Day 🔥</item>
+        <item quantity="other">🔥 Current Streak: %1$d Days 🔥</item>
+    </plurals>
+    <string name="alarms_locked_description">Locked</string>
+    <string name="alarms_delete_description">Delete</string>
+    <string name="alarms_delete_title">Delete alarm?</string>
+    <string name="alarms_delete_message">The %1$s alarm will be permanently removed.</string>
+
+    <!-- Banners -->
+    <string name="exact_alarm_title">Exact alarms are off</string>
+    <string name="exact_alarm_body">Without this permission, Android may delay your alarms by several minutes.</string>
+    <string name="exact_alarm_enable">Enable in Settings</string>
+    <string name="battery_title">Battery optimization is on</string>
+    <string name="battery_body">Some phones stop background apps to save power, which can make an alarm ring late or not at all. Let AlarmBoss run unrestricted so it wakes you on time.</string>
+    <string name="battery_allow">Allow</string>
+    <string name="battery_not_now">Not now</string>
+
+    <!-- Alarm editor -->
+    <string name="edit_title_new">New alarm</string>
+    <string name="edit_title_edit">Edit alarm</string>
+    <string name="edit_time">Time: %1$s</string>
+    <string name="edit_label">Label</string>
+    <string name="edit_repeat">Repeat</string>
+    <string name="edit_mode">Mode</string>
+    <string name="edit_easy_description">Rings normally; dismiss or snooze with one tap.</string>
+    <string name="edit_medium_description">The app will randomly pick ONE of your checked tasks each time this alarm rings.</string>
+    <string name="edit_strict_description">Strict mode requires completing a verified physical workout or mental puzzle before the alarm can be dismissed.</string>
+    <string name="edit_strict_category">Strict Category</string>
+    <string name="edit_strict_physical">Physical</string>
+    <string name="edit_strict_mental">Mental</string>
+    <string name="edit_physical_type">Physical Exercise Type</string>
+    <string name="edit_duration">Duration: %1$dm %2$ds</string>
+    <string name="edit_mental_type">Mental Challenge Type</string>
+    <string name="edit_sound">Sound</string>
+    <string name="edit_sound_default">Default alarm sound</string>
+    <string name="edit_sound_custom">Custom sound selected</string>
+    <string name="edit_vibrate">Vibrate</string>
+    <string name="edit_dynamic_brightness">Dynamic Brightness</string>
+    <string name="edit_dynamic_brightness_description">Reduces initial screen brightness to protect your eyes, then gradually increases</string>
+    <string name="edit_flashlight_blink">Flashlight Blinking</string>
+    <string name="edit_flashlight_blink_description">Blinks the camera flashlight while the alarm is ringing</string>
+    <string name="edit_gradual_volume">Gradual Volume Ramp-Up</string>
+    <string name="edit_gradual_volume_description">Volume starts at a whisper and gently swells to full over 25 seconds</string>
+    <string name="edit_sunrise_mode">Sunrise Glow Mode</string>
+    <string name="edit_sunrise_mode_description">Displays a warm sunrise glow animation to naturally wake your eyes</string>
+    <string name="edit_wake_check">Post-Wake-Up Check</string>
+    <string name="edit_wake_check_description">Confirms you are still awake 5 minutes after dismiss; rings again if ignored</string>
+    <string name="edit_morning_briefing">Voice Morning Briefing</string>
+    <string name="edit_morning_briefing_description">Speaks the time, your streak, and a morning motivational boost upon wake-up</string>
+    <string name="edit_camera_warning_title">Camera access needed</string>
+    <string name="edit_camera_warning_body">This alarm\'s challenge uses the camera. Without it you\'ll be asked again when the alarm rings, and may have to open Settings before you can dismiss it.</string>
+    <string name="edit_camera_warning_save">Save anyway</string>
+    <string name="edit_camera_warning_keep_editing">Keep editing</string>
+</resources>

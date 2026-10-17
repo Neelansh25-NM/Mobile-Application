@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import java.util.Calendar
 enum class AlarmMode { EASY, MEDIUM, STRICT }
 
-enum class MediumTaskType { MATH, READING, LYRICS, BARCODE }
+enum class MediumTaskType { MATH, READING, LYRICS, BARCODE, PATTERN_LOCK, WORD_SCRAMBLE, STEPS }
 
 // Add these enums for Strict Mode categorization
 enum class StrictExerciseCategory { PHYSICAL, MENTAL }
@@ -31,14 +31,28 @@ data class Alarm @JvmOverloads constructor(
 
     // Add these fields referenced in AlarmRingingActivity
     val strictCategory: StrictExerciseCategory = StrictExerciseCategory.PHYSICAL,
-    val mentalExerciseType: MentalExerciseType = MentalExerciseType.MEMORY_GRID
-)
+    val mentalExerciseType: MentalExerciseType = MentalExerciseType.MEMORY_GRID,
+    val dynamicBrightness: Boolean = false,
+    val flashLightBlink: Boolean = false,
+    val gradualVolume: Boolean = false,
+    val sunriseMode: Boolean = false,
+    val wakeCheck: Boolean = false,
+    val morningBriefing: Boolean = false
+) {
+    /** In Medium and Strict modes, the safeguard awake check is locked and always active. */
+    val isWakeCheckEffective: Boolean
+        get() = mode == AlarmMode.MEDIUM || mode == AlarmMode.STRICT || wakeCheck
+}
 
-fun isAlarmLocked(alarmHour: Int, alarmMinute: Int, isEnabled: Boolean): Boolean {
+fun isAlarmLocked(
+    alarmHour: Int,
+    alarmMinute: Int,
+    isEnabled: Boolean,
+    now: Calendar = Calendar.getInstance()
+): Boolean {
     if (!isEnabled) return false
 
-    val now = Calendar.getInstance()
-    val alarmTime = Calendar.getInstance().apply {
+    val alarmTime = (now.clone() as Calendar).apply {
         set(Calendar.HOUR_OF_DAY, alarmHour)
         set(Calendar.MINUTE, alarmMinute)
         set(Calendar.SECOND, 0)

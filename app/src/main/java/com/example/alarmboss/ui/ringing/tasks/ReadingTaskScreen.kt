@@ -15,9 +15,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.alarmboss.data.ContentStore
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.alarmboss.R
 import com.example.alarmboss.util.wordOverlapPercent
 import java.util.Locale
 
@@ -30,8 +32,8 @@ import java.util.Locale
 @Composable
 fun ReadingTaskScreen(onDone: () -> Unit) {
     val context = LocalContext.current
-    val store = remember { ContentStore(context) }
-    var passage by remember { mutableStateOf<String?>(null) }
+    val contentViewModel: TaskContentViewModel = viewModel()
+    val passage by contentViewModel.passage.collectAsState()
     val scrollState = rememberScrollState()
     var heard by remember { mutableStateOf("") }
     var typed by remember { mutableStateOf("") }
@@ -40,7 +42,7 @@ fun ReadingTaskScreen(onDone: () -> Unit) {
     var recognitionError by remember { mutableStateOf<String?>(null) }
     val recognitionAvailable = remember { SpeechRecognizer.isRecognitionAvailable(context) }
 
-    LaunchedEffect(Unit) { passage = store.getRandomPassage() }
+    LaunchedEffect(Unit) { contentViewModel.loadPassage() }
 
     // Only the closing sentence needs to be read aloud -- speech recognition sessions are
     // short-lived, so checking the whole passage isn't reliable, but the last sentence is
@@ -86,36 +88,36 @@ fun ReadingTaskScreen(onDone: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Text("Read the passage below, then read the last line aloud", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.reading_title), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(12.dp))
         Column(Modifier.weight(1f).verticalScroll(scrollState)) {
-            Text(passage ?: "Loading…")
+            Text(passage ?: stringResource(R.string.reading_loading))
         }
         Spacer(Modifier.height(12.dp))
         if (scrolledToEnd) {
             if (isTypingMode) {
                 // --- TYPING MODE UI ---
-                Text("Type the line below (case-sensitive):", style = MaterialTheme.typography.bodySmall)
-                Text("\"$confirmPhrase\"", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.reading_type_prompt), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.task_quoted, confirmPhrase), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },
-                    label = { Text("Typed answer") },
+                    label = { Text(stringResource(R.string.task_typed_answer)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 if (typed.isNotBlank() && !isTypedCorrectly) {
                     Text(
-                        "Typed answer must match the original case exactly.",
+                        stringResource(R.string.reading_type_mismatch),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
                 } else if (isTypedCorrectly) {
                     Text(
-                        "Exact match achieved!",
+                        stringResource(R.string.reading_exact_match),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -123,43 +125,43 @@ fun ReadingTaskScreen(onDone: () -> Unit) {
 
                 Spacer(Modifier.height(8.dp))
                 TextButton(onClick = { isTypingMode = false }) {
-                    Text("Switch to voice dictation")
+                    Text(stringResource(R.string.reading_switch_to_voice))
                 }
 
             } else {
                 // --- VOICE DICTATION MODE UI ---
-                Text("Read this line aloud to confirm:", style = MaterialTheme.typography.bodySmall)
-                Text("\"$confirmPhrase\"", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.reading_read_prompt), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.task_quoted, confirmPhrase), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(8.dp))
 
                 if (!recognitionAvailable) {
                     Text(
-                        "Voice recognition isn't available on this device.",
+                        stringResource(R.string.task_voice_unavailable),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = { isTypingMode = true }) {
-                        Text("Switch to typing mode")
+                        Text(stringResource(R.string.reading_switch_to_typing_mode))
                     }
                 } else {
                     if (heard.isNotBlank()) {
-                        Text("Heard: \"$heard\"", style = MaterialTheme.typography.bodySmall)
-                        Text("Voice Match: $voiceMatchPercent%", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.task_heard, heard), style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.task_voice_match_percent, voiceMatchPercent), style = MaterialTheme.typography.bodySmall)
                     }
                     if (recognitionError != null) {
                         Text(
-                            "Couldn't hear that ($recognitionError). Try again.",
+                            stringResource(R.string.reading_error, recognitionError.orEmpty()),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = { startListening() }, enabled = !listening) {
-                        Text(if (listening) "Listening…" else "Tap and read aloud")
+                        Text(stringResource(if (listening) R.string.task_listening else R.string.reading_tap_to_read))
                     }
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(onClick = { isTypingMode = true }) {
-                        Text("Switch to typing instead")
+                        Text(stringResource(R.string.reading_switch_to_typing))
                     }
                 }
             }
@@ -171,10 +173,10 @@ fun ReadingTaskScreen(onDone: () -> Unit) {
                 onClick = onDone,
                 enabled = if (isTypingMode) isTypedCorrectly else voiceMatchPercent >= 60
             ) {
-                Text("Done")
+                Text(stringResource(R.string.task_done))
             }
         } else {
-            Text("Scroll to the bottom to continue", style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.reading_scroll_hint), style = MaterialTheme.typography.bodySmall)
         }
     }
 }

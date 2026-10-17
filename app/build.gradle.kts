@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
 
 android {
     namespace = "com.example.alarmboss"
@@ -16,10 +26,11 @@ android {
         applicationId = "com.example.alarmboss"
         minSdk = 36
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 6
+        versionName = "1.5.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {
@@ -35,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -70,7 +82,4 @@ dependencies {
     implementation(libs.mlkit.pose.detection.accurate)
 
     implementation(libs.androidx.material.icons.extended)
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
-
-
 }

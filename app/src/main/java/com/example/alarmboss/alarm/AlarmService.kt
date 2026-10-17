@@ -5,6 +5,8 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
@@ -19,6 +21,9 @@ import com.example.alarmboss.R
 import com.example.alarmboss.ui.ringing.AlarmRingingActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
@@ -30,6 +35,10 @@ class AlarmService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
+    private var volumeJob: Job? = null
+    private var flashlightJob: Job? = null
+    private var cameraManager: CameraManager? = null
+    private var torchCameraId: String? = null
     private val scope = CoroutineScope(Dispatchers.Main)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -54,10 +63,18 @@ class AlarmService : Service() {
     private fun startRinging(alarmId: Long) {
         val app = application as AlarmBossApp
         scope.launch {
-            val alarm = app.repository.getAlarm(alarmId) ?: return@launch
+            val alarm = app.repository.getAlarm(alarmId)
+            if (alarm == null) {
+                stopSelf()
+                return@launch
+            }
 
             val fullScreenIntent = Intent(this@AlarmService, AlarmRingingActivity::class.java).apply {
                 putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
+                putExtra(AlarmRingingActivity.EXTRA_DYNAMIC_BRIGHTNESS, alarm.dynamicBrightness)
+                putExtra(AlarmRingingActivity.EXTRA_SUNRISE_MODE, alarm.sunriseMode)
+                putExtra(AlarmRingingActivity.EXTRA_MORNING_BRIEFING, alarm.morningBriefing)
+                putExtra(AlarmRingingActivity.EXTRA_WAKE_CHECK, alarm.wakeCheck)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             val fullScreenPendingIntent = PendingIntent.getActivity(
@@ -67,8 +84,8 @@ class AlarmService : Service() {
 
             val notification: Notification = NotificationCompat.Builder(this@AlarmService, AlarmBossApp.CHANNEL_ALARM)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(alarm.label.ifBlank { "Alarm" })
-                .setContentText("Tap to open")
+                .setContentTitle(alarm.label.ifBlank { getString(R.string.ringing_default_label) })
+                .setContentText(getString(R.string.notification_tap_to_open))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(fullScreenPendingIntent, true)
@@ -79,12 +96,74 @@ class AlarmService : Service() {
             startForeground(NOTIFICATION_ID, notification)
             startActivity(fullScreenIntent)
 
-            playSound(alarm.soundUri)
+            playSound(alarm.soundUri, alarm.gradualVolume)
             if (alarm.vibrate) startVibration()
+            if (alarm.flashLightBlink) startFlashlightBlink()
         }
     }
 
-    private fun playSound(soundUri: String?) {
+    private fun startFlashlightBlink() {
+        stopFlashlightBlink()
+        val manager = getSystemService(Context.CAMERA_SERVICE) as? CameraManager ?: return
+        cameraManager = manager
+        try {
+            val cameraIds = manager.cameraIdList
+            for (id in cameraIds) {
+                val chars = manager.getCameraCharacteristics(id)
+                val hasFlash = chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+                val facing = chars.get(CameraCharacteristics.LENS_FACING)
+                if (hasFlash && facing == CameraCharacteristics.LENS_FACING_BACK) {
+                    torchCameraId = id
+                    break
+                }
+            }
+            if (torchCameraId == null) {
+                for (id in cameraIds) {
+                    val chars = manager.getCameraCharacteristics(id)
+                    if (chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true) {
+                        torchCameraId = id
+                        break
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            return
+        }
+
+        val targetId = torchCameraId ?: return
+
+        flashlightJob = scope.launch(Dispatchers.Default) {
+            var torchOn = false
+            try {
+                while (isActive) {
+                    torchOn = !torchOn
+                    try {
+                        manager.setTorchMode(targetId, torchOn)
+                    } catch (_: Exception) {
+                        // In case camera is temporarily occupied by an exercise or barcode scanning task
+                    }
+                    delay(400)
+                }
+            } finally {
+                try {
+                    manager.setTorchMode(targetId, false)
+                } catch (_: Exception) { }
+            }
+        }
+    }
+
+    private fun stopFlashlightBlink() {
+        flashlightJob?.cancel()
+        flashlightJob = null
+        val targetId = torchCameraId
+        if (targetId != null) {
+            try {
+                cameraManager?.setTorchMode(targetId, false)
+            } catch (_: Exception) { }
+        }
+    }
+
+    private fun playSound(soundUri: String?, gradualVolume: Boolean) {
         stopMediaPlayer()
         try {
             val uri = soundUri?.let { Uri.parse(it) }
@@ -101,7 +180,25 @@ class AlarmService : Service() {
                 setDataSource(this@AlarmService, uri!!)
                 isLooping = true
                 prepare()
+                if (gradualVolume) {
+                    setVolume(0.05f, 0.05f)
+                } else {
+                    setVolume(1.0f, 1.0f)
+                }
                 start()
+            }
+
+            if (gradualVolume) {
+                volumeJob = scope.launch(Dispatchers.Default) {
+                    val steps = 25
+                    for (i in 1..steps) {
+                        delay(1000)
+                        val vol = (0.05f + (0.95f * (i.toFloat() / steps))).coerceIn(0.05f, 1.0f)
+                        try {
+                            mediaPlayer?.setVolume(vol, vol)
+                        } catch (_: Exception) { }
+                    }
+                }
             }
         } catch (e: Exception) {
             // If the custom sound URI can no longer be resolved (e.g. permission revoked),
@@ -123,9 +220,12 @@ class AlarmService : Service() {
     fun stopRinging() {
         stopMediaPlayer()
         vibrator?.cancel()
+        stopFlashlightBlink()
     }
 
     private fun stopMediaPlayer() {
+        volumeJob?.cancel()
+        volumeJob = null
         mediaPlayer?.apply {
             if (isPlaying) stop()
             release()

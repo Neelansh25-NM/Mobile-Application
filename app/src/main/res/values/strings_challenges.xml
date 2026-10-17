@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared by the wake-up challenges -->
+    <string name="task_answer">Answer</string>
+    <string name="task_typed_answer">Typed answer</string>
+    <string name="task_try_again">Try again</string>
+    <string name="task_submit">Submit</string>
+    <string name="task_done">Done</string>
+    <string name="task_continue">Continue</string>
+    <string name="task_listening">Listening…</string>
+    <string name="task_progress">%1$d / %2$d</string>
+    <string name="task_heard">Heard: \"%1$s\"</string>
+    <string name="task_quoted">\"%1$s\"</string>
+    <string name="task_match_percent">Match: %1$d%%</string>
+    <string name="task_voice_match_percent">Voice Match: %1$d%%</string>
+    <string name="task_voice_unavailable">Voice recognition isn\'t available on this device.</string>
+
+    <!-- Math -->
+    <string name="math_title">Solve %1$d problems to dismiss</string>
+    <string name="math_toggle_sign_description">Toggle negative sign</string>
+
+    <!-- Maze -->
+    <string name="maze_title">Navigate the maze to dismiss alarm</string>
+    <string name="maze_move_up">Move up</string>
+    <string name="maze_move_down">Move down</string>
+    <string name="maze_move_left">Move left</string>
+    <string name="maze_move_right">Move right</string>
+
+    <!-- Memory grid, pattern lock, sequence -->
+    <string name="memory_memorize">Memorize the pattern</string>
+    <string name="memory_tap">Tap the highlighted tiles</string>
+    <string name="pattern_memorize">Memorize the pattern path</string>
+    <string name="pattern_trace">Trace the pattern</string>
+    <string name="sequence_watch">Watch the sequence</string>
+    <string name="sequence_repeat">Repeat the sequence</string>
+
+    <!-- Word scramble -->
+    <plurals name="scramble_title">
+        <item quantity="one">Unscramble %1$d word</item>
+        <item quantity="other">Unscramble %1$d words</item>
+    </plurals>
+
+    <!-- Barcode -->
+    <string name="barcode_title">Scan any barcode to dismiss</string>
+    <string name="barcode_title_registered">Scan registered barcode</string>
+    <string name="barcode_hint">Get up and find something with a barcode on it -- a food package, a book, a bottle, anything works. Point the camera at it.</string>
+    <string name="barcode_custom_hint">Scan your registered item (%1$s) to dismiss.</string>
+    <string name="barcode_mismatch">Barcode does not match your registered item! Try again.</string>
+    <string name="barcode_last_scanned">Last scanned: %1$s</string>
+    <string name="barcode_camera_required">Camera permission is required for this task.</string>
+
+    <!-- Step counter -->
+    <string name="steps_title">Take %1$d steps to dismiss</string>
+    <string name="steps_hint">Get out of bed and walk around. Keep your phone with you.</string>
+    <string name="steps_progress">%1$d / %2$d steps</string>
+    <string name="steps_completed">Target reached! You are now awake.</string>
+    <string name="steps_permission_required">Physical activity permission is needed to detect steps.</string>
+
+    <!-- Reading -->
+    <string name="reading_title">Read the passage below, then read the last line aloud</string>
+    <string name="reading_loading">Loading…</string>
+    <string name="reading_type_prompt">Type the line below (case-sensitive):</string>
+    <string name="reading_type_mismatch">Typed answer must match the original case exactly.</string>
+    <string name="reading_exact_match">Exact match achieved!</string>
+    <string name="reading_switch_to_voice">Switch to voice dictation</string>
+    <string name="reading_read_prompt">Read this line aloud to confirm:</string>
+    <string name="reading_switch_to_typing_mode">Switch to typing mode</string>
+    <string name="reading_error">Couldn\'t hear that (%1$s). Try again.</string>
+    <string name="reading_tap_to_read">Tap and read aloud</string>
+    <string name="reading_switch_to_typing">Switch to typing instead</string>
+    <string name="reading_scroll_hint">Scroll to the bottom to continue</string>
+
+    <!-- Lyrics -->
+    <string name="lyrics_none">No lyric lines set up yet. Add some in Settings, then this task will ask you to sing them. Skipping for now.</string>
+    <string name="lyrics_sing_this">Sing this line:</string>
+    <string name="lyrics_no_voice">Voice recognition isn\'t available on this device (this is common on phones where Google isn\'t set as the default voice input app). Type what you sang instead:</string>
+    <string name="lyrics_error">Couldn\'t hear that (%1$s). Try again or type below.</string>
+    <string name="lyrics_tap_to_sing">Tap and sing</string>
+    <string name="lyrics_or_type">or type what you sang:</string>
+
+    <!-- Boss fight -->
+    <string name="boss_title">BOSS FIGHT</string>
+    <string name="boss_stage">Stage %1$d of %2$d</string>
+
+    <!-- Strict physical workout -->
+    <string name="strict_title">Strict mode: keep moving to dismiss</string>
+    <string name="strict_exercise_squats">Exercise: Squats</string>
+    <string name="strict_exercise_jumping_jacks">Exercise: Jumping jacks</string>
+    <string name="strict_time_remaining">Time remaining: %1$d:%2$02d</string>
+    <string name="strict_reps_detected">Reps detected: %1$d</string>
+    <string name="strict_not_visible">Can\'t see you clearly — step back so your full body is in frame.</string>
+    <string name="strict_change_exercise">Change exercise</string>
+    <string name="strict_camera_required">Camera permission is required for Strict mode.</string>
+
+    <!-- Camera permission fallback -->
+    <string name="camera_denied_settings">Camera access was denied. Open Settings to allow it for AlarmBoss.</string>
+    <string name="camera_open_settings">Open Settings</string>
+    <string name="camera_grant">Grant camera permission</string>
+</resources>
