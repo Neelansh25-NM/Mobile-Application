@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -65,8 +66,87 @@ class MainActivity : ComponentActivity() {
         setContent {
             AlarmBossTheme {
                 RequestRuntimePermissions()
-                AlarmBossRoot()
+                AlarmBossAppWithLaunchScreen()
             }
+        }
+    }
+}
+
+@Composable
+private fun AlarmBossAppWithLaunchScreen() {
+    var isLaunching by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(1200L) // smooth 1.2s branded launch screen
+        isLaunching = false
+    }
+
+    androidx.compose.animation.Crossfade(
+        targetState = isLaunching,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 400),
+        label = "LaunchCrossfade"
+    ) { launching ->
+        if (launching) {
+            LaunchScreen()
+        } else {
+            AlarmBossRoot()
+        }
+    }
+}
+
+@Composable
+private fun LaunchScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    listOf(
+                        androidx.compose.ui.graphics.Color(0xFF0F081D),
+                        androidx.compose.ui.graphics.Color(0xFF1B0A2E),
+                        androidx.compose.ui.graphics.Color(0xFF09040E)
+                    )
+                )
+            ),
+        contentAlignment = androidx.compose.ui.Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(32.dp),
+                color = androidx.compose.ui.graphics.Color(0xFF1E0E38),
+                border = androidx.compose.foundation.BorderStroke(2.5.dp, androidx.compose.ui.graphics.Color(0xFF9D4EDD)),
+                shadowElevation = 16.dp,
+                modifier = Modifier.size(160.dp)
+            ) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(R.drawable.ic_alarm_boss_logo),
+                    contentDescription = "AlarmBoss Logo",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
+                color = androidx.compose.ui.graphics.Color.White
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Conquer Your Mornings",
+                style = MaterialTheme.typography.bodyLarge,
+                color = androidx.compose.ui.graphics.Color(0xFFC77DFF),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+            )
+            Spacer(Modifier.height(32.dp))
+            CircularProgressIndicator(
+                color = androidx.compose.ui.graphics.Color(0xFFE0AAFF),
+                modifier = Modifier.size(28.dp),
+                strokeWidth = 3.dp
+            )
         }
     }
 }

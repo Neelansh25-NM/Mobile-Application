@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.AlarmBoss" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.AlarmBoss" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">#12081E</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_alarm_boss_logo</item>
+    </style>
 </resources>

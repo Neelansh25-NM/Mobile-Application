@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -164,18 +166,17 @@ fun AlarmListScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(36.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFF1B0A2E),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
+                            shadowElevation = 2.dp,
+                            modifier = Modifier.size(38.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Alarm,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            Image(
+                                painter = painterResource(R.drawable.ic_alarm_boss_logo),
+                                contentDescription = "AlarmBoss Mascot",
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
                         Spacer(Modifier.width(12.dp))
                         Column {
@@ -299,7 +300,7 @@ fun AlarmListScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text("🔥", fontSize = 26.sp)
                                     Spacer(Modifier.width(8.dp))
@@ -323,6 +324,20 @@ fun AlarmListScreen(
                                     color = Color.White.copy(alpha = 0.90f)
                                 )
                             }
+                            Spacer(Modifier.width(12.dp))
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF1B0A2E),
+                                border = BorderStroke(1.5.dp, Color(0xFFFFD56B)),
+                                shadowElevation = 4.dp,
+                                modifier = Modifier.size(52.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.ic_alarm_boss_logo),
+                                    contentDescription = "AlarmBoss Mascot",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                     }
                 }
@@ -339,21 +354,20 @@ fun AlarmListScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                            modifier = Modifier.size(90.dp)
+                            shape = RoundedCornerShape(28.dp),
+                            color = Color(0xFF1B0A2E),
+                            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)),
+                            shadowElevation = 8.dp,
+                            modifier = Modifier.size(130.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Alarm,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(44.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
+                            Image(
+                                painter = painterResource(R.drawable.ic_alarm_boss_logo),
+                                contentDescription = "AlarmBoss Mascot",
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
                         Text(
-                            text = "No Alarms Scheduled",
+                            text = "The Boss is Waiting",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
